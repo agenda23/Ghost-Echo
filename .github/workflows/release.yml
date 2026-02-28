@@ -2,8 +2,8 @@ name: Build and Release Extension
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
   build-and-release:
@@ -44,10 +44,10 @@ jobs:
         # GitHubの「Releases」に自動的にファイルをアップロードしてリリースを作成
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly-${{ github.run_number }}
-          name: Nightly Build #${{ github.run_number }}
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           files: ghost-echo-extension.zip
           draft: false
-          prerelease: true # mainへのプッシュにつきPre-releaseとして扱う
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
