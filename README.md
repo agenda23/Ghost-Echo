@@ -1,4 +1,4 @@
-# 👁‍🗨 Project Ghost-Echo (ゴースト・エコー)
+# 👁‍🗨 Project Ghost-Echo (ゴースト・エコー) - v0.8
 
 <div align="center">
   <img src="./ghost-echo.jpg" alt="Ghost-Echo Header" width="100%">
