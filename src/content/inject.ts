@@ -1,5 +1,14 @@
 (function () {
-    console.log('[Ghost-Echo] --- STEALTH HOOKS STARTING (v3.6) ---');
+    const scriptEl = document.getElementById('ghost-echo-injected');
+    const isDebug = scriptEl?.dataset?.debug === 'true';
+
+    function debugLog(...args: any[]) {
+        if (isDebug) {
+            console.log(...args);
+        }
+    }
+
+    debugLog('[Ghost-Echo] --- STEALTH HOOKS STARTING (v3.6) ---');
 
     function wrapFetch(original: typeof fetch) {
         return async function (this: any, ...args: any[]) {
@@ -12,14 +21,10 @@
                 else url = String(firstArg);
             } catch (e) { url = 'unknown'; }
 
-            if (url && !url.startsWith('data:')) {
-                console.log('[Ghost-Echo] fetch detected:', url);
-            }
-
             const response = await (original as any).apply(this, args);
 
             if (url.includes('TweetDetail') || url.includes('ThreadView') || url.includes('graphql')) {
-                console.log('[Ghost-Echo] TARGET FETCH CAUGHT:', url);
+                debugLog('[Ghost-Echo] TARGET FETCH CAUGHT:', url);
                 const clone = response.clone();
                 clone.json().then((data: any) => {
                     window.postMessage({ type: 'GHOST_ECHO_API_DATA', url, data }, '*');
@@ -44,7 +49,7 @@
             this.addEventListener('load', function () {
                 const url = (xhr as any)._url;
                 if (url && (url.includes('TweetDetail') || url.includes('ThreadView') || url.includes('graphql'))) {
-                    console.log('[Ghost-Echo] TARGET XHR CAUGHT:', url);
+                    debugLog('[Ghost-Echo] TARGET XHR CAUGHT:', url);
                     try {
                         const data = JSON.parse(xhr.responseText);
                         window.postMessage({ type: 'GHOST_ECHO_API_DATA', url, data }, '*');
@@ -61,12 +66,12 @@
     Object.defineProperty(window, 'fetch', {
         get: () => currentFetch,
         set: (v) => {
-            console.log('[Ghost-Echo] Alert: Something tried to overwrite fetch. Re-applying hook.');
+            debugLog('[Ghost-Echo] Alert: Something tried to overwrite fetch. Re-applying hook.');
             currentFetch = wrapFetch(v);
         },
         configurable: true
     });
 
     hookXHR();
-    console.log('[Ghost-Echo] --- STEALTH HOOKS ACTIVATED (v3.6) ---');
+    debugLog('[Ghost-Echo] --- STEALTH HOOKS ACTIVATED (v3.6) ---');
 })();

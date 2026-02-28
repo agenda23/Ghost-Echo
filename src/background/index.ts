@@ -12,16 +12,46 @@ async function updateBadge(count: number) {
     }
 }
 
+// アイコンの色を動的に変更する関数
+function setIconColor(isActive: boolean) {
+    // Service Worker 内で OffscreenCanvas を使用
+    const canvas = new OffscreenCanvas(16, 16);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 背景（角丸または円）
+    ctx.fillStyle = isActive ? '#3b82f6' : '#94a3b8'; // アクティブなら青、非アクティブならグレー
+    ctx.beginPath();
+    ctx.arc(8, 8, 8, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // 白抜きの「G」の文字（任意）
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('G', 8, 8.5);
+
+    const imageData = ctx.getImageData(0, 0, 16, 16);
+    chrome.action.setIcon({ imageData: { '16': imageData } });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
     console.log('Ghost-Echo extension installed');
     chrome.storage.local.set({ isActive: false, captureCount: 0 });
     updateBadge(0);
+    setIconColor(false);
 });
 
-// Storage の変更を監視してバッジを同期
+// Storage の変更を監視してバッジ・アイコンを同期
 chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.captureCount) {
-        updateBadge(changes.captureCount.newValue);
+    if (area === 'local') {
+        if (changes.captureCount) {
+            updateBadge(changes.captureCount.newValue);
+        }
+        if (changes.isActive) {
+            setIconColor(changes.isActive.newValue === true);
+        }
     }
 });
 
@@ -62,9 +92,14 @@ async function saveTweet(content: any) {
             const tweet = content.legacy;
 
             // ユーザー情報の構造は複数パターンあるためフォールバックを含めて取得
-            const coreResult = content.core?.user_results?.result;
-            const userLegacy = coreResult?.legacy;
-            const userHandle = userLegacy?.screen_name || coreResult?.rest_id || tweet?.screen_name || 'unknown_user';
+            const userResult = content.core?.user_results?.result;
+
+            const userHandle =
+                userResult?.core?.screen_name ||        // 最新のGraphQL構造(提供いただいたデータ)
+                userResult?.legacy?.screen_name ||      // 従来の構造
+                userResult?.rest_id ||                  // IDへのフォールバック
+                tweet?.screen_name ||                   // 古い直接のプロパティ
+                'unknown_user';
 
             if (tweet) {
                 const reply: Reply = {
@@ -74,7 +109,7 @@ async function saveTweet(content: any) {
                     full_text: tweet.full_text,
                     reply_count: tweet.reply_count,
                     favorite_count: tweet.favorite_count,
-                    timestamp: new Date().toISOString()
+                    timestamp: tweet.created_at ? new Date(tweet.created_at).toISOString() : new Date().toISOString()
                 };
 
                 await db.saveReply(reply);

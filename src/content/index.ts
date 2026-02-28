@@ -1,11 +1,21 @@
+let isDebugMode = false;
+
+function debugLog(...args: any[]) {
+    if (isDebugMode) {
+        console.log(...args);
+    }
+}
+
 // @ts-ignore
 import injectUrl from './inject.ts?script';
 
 console.log('Ghost-Echo content script loaded');
 
 const injectScript = () => {
-    chrome.storage.local.get('isActive', (data) => {
+    chrome.storage.local.get(['isActive', 'isDebugMode'], (data) => {
         const active = data.isActive === true;
+        isDebugMode = data.isDebugMode === true;
+
         console.log('[Ghost-Echo] Capture Status Check:', active ? 'ENABLED' : 'DISABLED');
 
         if (!active) return;
@@ -13,6 +23,7 @@ const injectScript = () => {
 
         const script = document.createElement('script');
         script.id = 'ghost-echo-injected';
+        script.dataset.debug = isDebugMode ? 'true' : 'false';
         script.src = chrome.runtime.getURL(injectUrl);
 
         script.onload = () => {
@@ -28,7 +39,7 @@ const injectScript = () => {
         const target = document.head || document.documentElement;
         if (target) {
             target.appendChild(script);
-            console.log('[Ghost-Echo] Attempting to inject stealth hook into Main World (v3.6)...');
+            debugLog('[Ghost-Echo] Attempting to inject stealth hook into Main World (v3.6)...');
         } else {
             console.error('[Ghost-Echo] No injection target found.');
         }
@@ -51,7 +62,7 @@ const setupObserver = () => {
 };
 
 const startMainObserver = () => {
-    console.log('[Ghost-Echo] Starting DOM observer...');
+    debugLog('[Ghost-Echo] Starting DOM observer...');
     const target = document.body;
     if (!target) return;
 
@@ -67,10 +78,10 @@ setupObserver();
 window.addEventListener('message', (event) => {
     if (event.data?.type === 'GHOST_ECHO_API_DATA') {
         const { url, data } = event.data;
-        console.log('[Ghost-Echo] Received data from Page World:', url);
+        debugLog('[Ghost-Echo] Received data from Page World:', url);
 
         const tweets = extractTweets(data);
-        console.log(`[Ghost-Echo] Extracted ${tweets.length} tweets from response.`);
+        debugLog(`[Ghost-Echo] Extracted ${tweets.length} tweets from response.`);
 
         tweets.forEach(tweet => {
             chrome.runtime.sendMessage({
@@ -108,7 +119,12 @@ function extractTweets(obj: any): any[] {
 
 
 chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.isActive?.newValue === true) {
-        injectScript();
+    if (area === 'local') {
+        if (changes.isDebugMode !== undefined) {
+            isDebugMode = changes.isDebugMode.newValue === true;
+        }
+        if (changes.isActive?.newValue === true) {
+            injectScript();
+        }
     }
 });

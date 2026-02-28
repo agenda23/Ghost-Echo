@@ -4,19 +4,26 @@ import { db, Reply } from '../lib/db';
 function App() {
     const [replies, setReplies] = useState<Reply[]>([]);
     const [filter, setFilter] = useState('');
+    const [sortAsc, setSortAsc] = useState(false); // false:新しい順, true:古い順
 
     useEffect(() => {
         const load = async () => {
             const data = await db.getAllReplies();
-            setReplies(data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+            setReplies(data);
         };
         load();
     }, []);
 
-    const filteredReplies = replies.filter(r =>
-        r.full_text.toLowerCase().includes(filter.toLowerCase()) ||
-        r.user_handle.toLowerCase().includes(filter.toLowerCase())
-    );
+    const filteredReplies = replies
+        .filter(r =>
+            r.full_text.toLowerCase().includes(filter.toLowerCase()) ||
+            r.user_handle.toLowerCase().includes(filter.toLowerCase())
+        )
+        .sort((a, b) => {
+            const dateA = new Date(a.timestamp).getTime();
+            const dateB = new Date(b.timestamp).getTime();
+            return sortAsc ? dateA - dateB : dateB - dateA;
+        });
 
     const exportData = () => {
         const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(replies, null, 2))}`;
@@ -61,6 +68,9 @@ function App() {
                 <h1>Ghost-Echo Dashboard</h1>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>Total: {replies.length}</span>
+                    <button onClick={() => setSortAsc(!sortAsc)} style={{ padding: '0.5rem 1rem', cursor: 'pointer', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '4px' }}>
+                        {sortAsc ? '並び順: 古い順' : '並び順: 新しい順'}
+                    </button>
                     <button onClick={exportCSV} style={{ padding: '0.5rem 1rem', cursor: 'pointer', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px' }}>CSVエクスポート</button>
                     <button onClick={exportData} style={{ padding: '0.5rem 1rem', cursor: 'pointer' }}>JSON</button>
                     <button onClick={() => window.location.reload()} style={{ padding: '0.5rem 1rem', cursor: 'pointer' }}>更新</button>
