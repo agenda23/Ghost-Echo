@@ -27,6 +27,11 @@
 - [開発計画 (development-plan.md)](./doc/development-plan.md)
 - [開発手順書 (Development Guide.md)](./doc/Development%20Guide.md)
 
+## 使用説明
+実際の動作イメージについては、以下の動画をご参照ください。
+
+[![Ghost-Echo 仕様説明](https://img.youtube.com/vi/h7M9ih0iqFc/0.jpg)](https://www.youtube.com/watch?v=h7M9ih0iqFc)
+
 ## 開発の始め方
 
 ### 推奨技術スタック
