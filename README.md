@@ -22,6 +22,11 @@
 ## セキュリティとプライバシー
 - **完全ローカル動作**: 収集したデータが外部サーバーに送信されることはありません。すべての処理はブラウザ内で完結します。
 
+## ドキュメント
+- [操作マニュアル (usage.md)](./doc/usage.md)
+- [開発計画 (development-plan.md)](./doc/development-plan.md)
+- [開発手順書 (Development Guide.md)](./doc/Development%20Guide.md)
+
 ## 開発の始め方
 
 ### 推奨技術スタック
