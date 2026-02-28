@@ -1,0 +1,35 @@
+{
+    "manifest_version": 3,
+    "name": "Ghost-Echo",
+    "version": "0.1.0",
+    "description": "X (Twitter) Reply Collector with stealth features.",
+    "permissions": [
+        "storage",
+        "declarativeNetRequest",
+        "offscreen"
+    ],
+    "host_permissions": [
+        "https://x.com/*",
+        "https://twitter.com/*"
+    ],
+    "options_page": "dashboard.html",
+    "action": {
+        "default_popup": "index.html"
+    },
+    "background": {
+        "service_worker": "src/background/index.ts",
+        "type": "module"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://x.com/*",
+                "https://twitter.com/*"
+            ],
+            "js": [
+                "src/content/index.ts"
+            ],
+            "run_at": "document_start"
+        }
+    ]
+}
