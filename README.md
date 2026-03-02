@@ -27,6 +27,12 @@
 - [開発計画 (development-plan.md)](./doc/development-plan.md)
 - [開発手順書 (Development Guide.md)](./doc/Development%20Guide.md)
 
+   **※chrome拡張のインストール方法(外部サイト)**:  
+https://note.com/cute_echium873/n/n997dcf40b3a1
+
+
+
+
 ## 使用説明
 実際の動作イメージについては、以下の動画をご参照ください。
 
